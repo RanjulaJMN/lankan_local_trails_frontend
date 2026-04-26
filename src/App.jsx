@@ -4,7 +4,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 // Public Components
 import Home from "./pages/Home";
-import BrowsePlaces from "./pages/BrowsePlaces";      // renamed to avoid conflict
+import BrowsePlaces from "./pages/BrowsePlaces"; 
 import PlaceDetails from "./pages/PlaceDetails";
 
 // Admin Components
@@ -43,7 +43,7 @@ function AppRoutes() {
       {/* Admin Auth Routes */}
       <Route path="/admin/login" element={
         isAuthenticated && role === "ADMIN" ? 
-          <Navigate to="/admin" replace /> :   // was "/admin/dashboard"
+          <Navigate to="/admin" replace /> :
           <AdminLogin />
       } />
       <Route path="/admin/register" element={
