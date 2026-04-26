@@ -1,20 +1,7 @@
 // src/pages/Home.jsx
 import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 
 export default function Home() {
-  const { isAuthenticated, isAdmin } = useAuth();
-
-  if (isAuthenticated) {
-    if (isAdmin) {
-      // eslint-disable-next-line react-hooks/immutability
-      window.location.href = "/admin/dashboard";
-    } else {
-      // eslint-disable-next-line react-hooks/immutability
-      window.location.href = "/user/dashboard";
-    }
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
