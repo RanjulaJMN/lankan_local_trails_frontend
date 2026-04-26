@@ -26,9 +26,9 @@ export default function Home() {
   ];
 
   const categories = [
-    { name: "Historical", icon: Compass, color: "bg-amber-500" },
+    { name: "Heritage", icon: Compass, color: "bg-amber-500" },
     { name: "Nature", icon: Mountain, color: "bg-green-500" },
-    { name: "Cultural", icon: Camera, color: "bg-purple-500" }
+    { name: "Resort & Leisure", icon: Camera, color: "bg-purple-500" }
   ];
 
   return (
@@ -118,13 +118,13 @@ export default function Home() {
       {/* CTA Section */}
       <div className="container mx-auto px-4 py-16">
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-center text-white">
-          <h2 className="text-3xl font-bold mb-4">Ready to Explore?</h2>
-          <p className="text-lg mb-6 opacity-90">Start planning your one-day adventure today</p>
+          <h2 className="text-3xl font-bold mb-4">Ready for Adventure?</h2>
+          <p className="text-lg mb-6 opacity-90">Discover amazing places near you</p>
           <Link
-            to="/places"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-all"
+            to="/map"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-all font-semibold"
           >
-            Explore Now
+            View Map
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
