@@ -75,3 +75,13 @@ export const deletePlace = async (id) => {
     throw error;
   }
 };
+
+export const getPlace = async (id) => {
+  try {
+    const response = await api.get(`api/places/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching place:', error);
+    throw error;
+  }
+};

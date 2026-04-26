@@ -4,6 +4,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 // Public Components
 import Home from "./pages/Home";
+import BrowsePlaces from "./pages/BrowsePlaces";      // renamed to avoid conflict
+import PlaceDetails from "./pages/PlaceDetails";
 
 // Admin Components
 import AdminLayout from "./layouts/AdminLayout";
@@ -36,7 +38,8 @@ function AppRoutes() {
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Home />} />
-      
+      <Route path="/places" element={<BrowsePlaces />} />
+      <Route path="/places/:id" element={<PlaceDetails />} />
       {/* Admin Auth Routes */}
       <Route path="/admin/login" element={
         isAuthenticated && role === "ADMIN" ? 
