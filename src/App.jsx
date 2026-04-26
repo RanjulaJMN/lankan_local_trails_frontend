@@ -7,6 +7,8 @@ import Home from "./pages/Home";
 import BrowsePlaces from "./pages/BrowsePlaces"; 
 import PlaceDetails from "./pages/PlaceDetails";
 
+import SelectPlacesForPlan from "./pages/user/SelectPlacesForPlan";
+
 // Admin Components
 import AdminLayout from "./layouts/AdminLayout";
 import AdminLogin from "./pages/admin/AdminLogin";
@@ -86,7 +88,8 @@ function AppRoutes() {
           <UserLayout />
         </ProtectedRoute>
       }>
-        <Route path="dashboard" element={<UserDashboard />} />
+         <Route path="dashboard" element={<UserDashboard />} />
+         <Route path="create-plan" element={<SelectPlacesForPlan />} />
       </Route>
     </Routes>
   );
