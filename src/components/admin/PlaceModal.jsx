@@ -1,22 +1,7 @@
 import { useState, useEffect } from "react";
-import {
-  X,
-  Upload,
-  Trash2,
-  Compass,
-  Clock,
-  Lightbulb,
-  Plus,
-} from "lucide-react";
+import { X, Upload, Trash2, Compass, Clock, Lightbulb, Plus } from "lucide-react";
 
-export default function PlaceModal({
-  isOpen,
-  onClose,
-  onSubmit,
-  place,
-  mode = "create",
-  categories = [],
-}) {
+export default function PlaceModal({ isOpen, onClose, onSubmit, place, mode = "create", categories = [] }) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -27,7 +12,7 @@ export default function PlaceModal({
     distance: "",
     travelTips: "",
     categoryIds: [],
-    image: null,
+    image: null
   });
   const [previewImage, setPreviewImage] = useState("");
   const [errors, setErrors] = useState({});
@@ -35,27 +20,29 @@ export default function PlaceModal({
 
   useEffect(() => {
     if (isOpen) {
+      console.log("=== PLACE MODAL OPENED ===");
+      console.log("Mode:", mode);
+      console.log("Place object:", place);
+      console.log("Available categories:", categories);
+      
       if (place && mode !== "create") {
         console.log("Loading place for edit/view:", place);
-
+        
         // Extract category IDs from the place object
         let categoryIds = [];
-
-        // Check different possible structures from backend
-        if (place.categories && Array.isArray(place.categories)) {
-          // If categories array with objects
-          categoryIds = place.categories.map((c) => c.id);
-          console.log("Categories from array:", categoryIds);
-        } else if (place.categoryIds && Array.isArray(place.categoryIds)) {
-          // If categoryIds array directly
+        
+        // Your API returns categoryIds array
+        if (place.categoryIds && Array.isArray(place.categoryIds)) {
           categoryIds = place.categoryIds;
           console.log("Categories from categoryIds array:", categoryIds);
+        } else if (place.categories && Array.isArray(place.categories)) {
+          categoryIds = place.categories.map(c => c.id);
+          console.log("Categories from categories array:", categoryIds);
         } else if (place.category_id) {
-          // If single category
           categoryIds = [place.category_id];
           console.log("Single category:", categoryIds);
         }
-
+        
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setFormData({
           name: place.name || "",
@@ -67,16 +54,16 @@ export default function PlaceModal({
           distance: place.distance || "",
           travelTips: place.travelTips || place.travel_tips || "",
           categoryIds: categoryIds,
-          image: null,
+          image: null
         });
-
+        
         // Fix image URL handling for display
         let imageUrl = "";
         const imgUrl = place.imageUrl || place.image_url;
         if (imgUrl) {
-          if (imgUrl.startsWith("http")) {
+          if (imgUrl.startsWith('http')) {
             imageUrl = imgUrl;
-          } else if (imgUrl.startsWith("/images/")) {
+          } else if (imgUrl.startsWith('/images/')) {
             imageUrl = `http://localhost:8080${imgUrl}`;
           } else {
             imageUrl = `http://localhost:8080/uploads/${imgUrl}`;
@@ -94,53 +81,47 @@ export default function PlaceModal({
           distance: "",
           travelTips: "",
           categoryIds: [],
-          image: null,
+          image: null
         });
         setPreviewImage("");
       }
       setSelectedCategoryId("");
       setErrors({});
     }
-  }, [place, mode, isOpen]);
+  }, [place, mode, isOpen, categories]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
+      setErrors(prev => ({ ...prev, [name]: "" }));
     }
   };
 
   const handleAddCategory = () => {
     if (!selectedCategoryId) {
-      setErrors((prev) => ({
-        ...prev,
-        categoryIds: "Please select a category to add",
-      }));
+      setErrors(prev => ({ ...prev, categoryIds: "Please select a category to add" }));
       return;
     }
-
+    
     const categoryId = Number(selectedCategoryId);
     if (formData.categoryIds.includes(categoryId)) {
-      setErrors((prev) => ({
-        ...prev,
-        categoryIds: "Category already selected",
-      }));
+      setErrors(prev => ({ ...prev, categoryIds: "Category already selected" }));
       return;
     }
-
-    setFormData((prev) => ({
+    
+    setFormData(prev => ({
       ...prev,
-      categoryIds: [...prev.categoryIds, categoryId],
+      categoryIds: [...prev.categoryIds, categoryId]
     }));
     setSelectedCategoryId("");
-    setErrors((prev) => ({ ...prev, categoryIds: "" }));
+    setErrors(prev => ({ ...prev, categoryIds: "" }));
   };
 
   const handleRemoveCategory = (categoryId) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      categoryIds: prev.categoryIds.filter((id) => id !== categoryId),
+      categoryIds: prev.categoryIds.filter(id => id !== categoryId)
     }));
   };
 
@@ -148,41 +129,34 @@ export default function PlaceModal({
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setErrors((prev) => ({
-          ...prev,
-          image: "Image must be less than 5MB",
-        }));
+        setErrors(prev => ({ ...prev, image: "Image must be less than 5MB" }));
         return;
       }
-      if (!file.type.startsWith("image/")) {
-        setErrors((prev) => ({
-          ...prev,
-          image: "Only image files are allowed",
-        }));
+      if (!file.type.startsWith('image/')) {
+        setErrors(prev => ({ ...prev, image: "Only image files are allowed" }));
         return;
       }
-
-      setFormData((prev) => ({ ...prev, image: file }));
+      
+      setFormData(prev => ({ ...prev, image: file }));
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewImage(reader.result);
       };
       reader.readAsDataURL(file);
-      setErrors((prev) => ({ ...prev, image: "" }));
+      setErrors(prev => ({ ...prev, image: "" }));
     }
   };
 
   const handleRemoveImage = () => {
-    setFormData((prev) => ({ ...prev, image: null }));
+    setFormData(prev => ({ ...prev, image: null }));
     setPreviewImage("");
   };
 
   const validate = () => {
     const newErrors = {};
     if (!formData.name?.trim()) newErrors.name = "Place name is required";
-    if (formData.name?.length > 150)
-      newErrors.name = "Name must be less than 150 characters";
-
+    if (formData.name?.length > 150) newErrors.name = "Name must be less than 150 characters";
+    
     if (!formData.latitude) {
       newErrors.latitude = "Latitude is required";
     } else {
@@ -193,7 +167,7 @@ export default function PlaceModal({
         newErrors.latitude = "Latitude must be between -90 and 90";
       }
     }
-
+    
     if (!formData.longitude) {
       newErrors.longitude = "Longitude is required";
     } else {
@@ -204,17 +178,13 @@ export default function PlaceModal({
         newErrors.longitude = "Longitude must be between -180 and 180";
       }
     }
-
-    if (!formData.openingTime)
-      newErrors.openingTime = "Opening time is required";
-    if (!formData.closingTime)
-      newErrors.closingTime = "Closing time is required";
+    
+    if (!formData.openingTime) newErrors.openingTime = "Opening time is required";
+    if (!formData.closingTime) newErrors.closingTime = "Closing time is required";
     if (!formData.distance) newErrors.distance = "Distance is required";
-    if (formData.distance && isNaN(formData.distance))
-      newErrors.distance = "Distance must be a number";
-    if (formData.categoryIds.length === 0)
-      newErrors.categoryIds = "Please select at least one category";
-
+    if (formData.distance && isNaN(formData.distance)) newErrors.distance = "Distance must be a number";
+    if (formData.categoryIds.length === 0) newErrors.categoryIds = "Please select at least one category";
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -225,29 +195,12 @@ export default function PlaceModal({
 
     // Create FormData
     const submitData = new FormData();
-
-    // Format latitude and longitude to match DECIMAL(10,8) and DECIMAL(11,8)
+    
+    // Format latitude and longitude to 8 decimal places
     const formattedLatitude = parseFloat(formData.latitude).toFixed(8);
     const formattedLongitude = parseFloat(formData.longitude).toFixed(8);
-
-    // Validate range
-    if (formattedLatitude < -90 || formattedLatitude > 90) {
-      setErrors((prev) => ({
-        ...prev,
-        latitude: "Latitude must be between -90 and 90",
-      }));
-      return;
-    }
-
-    if (formattedLongitude < -180 || formattedLongitude > 180) {
-      setErrors((prev) => ({
-        ...prev,
-        longitude: "Longitude must be between -180 and 180",
-      }));
-      return;
-    }
-
-    // Append ALL fields with properly formatted numbers
+    
+    // Append ALL fields
     submitData.append("name", formData.name);
     submitData.append("description", formData.description || "");
     submitData.append("latitude", formattedLatitude);
@@ -256,48 +209,34 @@ export default function PlaceModal({
     submitData.append("closingTime", formData.closingTime);
     submitData.append("distance", String(formData.distance));
     submitData.append("travelTips", formData.travelTips || "");
-
+    
     // Append each category ID
-    formData.categoryIds.forEach((id) => {
+    formData.categoryIds.forEach(id => {
       submitData.append("categoryIds", String(id));
     });
-
+    
     // Append image if exists
     if (formData.image) {
       submitData.append("image", formData.image);
     }
-
-    console.log("Submitting with formatted coordinates:");
+    
+    console.log("Submitting place data:");
+    console.log("  categoryIds:", formData.categoryIds);
     console.log("  latitude:", formattedLatitude);
     console.log("  longitude:", formattedLongitude);
-
+    
     onSubmit(submitData);
-  };
-
-  // eslint-disable-next-line no-unused-vars
-  const getCategoryNames = () => {
-    return formData.categoryIds
-      .map((id) => {
-        const category = categories.find((c) => c.id === id);
-        return category ? category.name : `Category ${id}`;
-      })
-      .join(", ");
   };
 
   if (!isOpen) return null;
 
   const isViewMode = mode === "view";
-  const title =
-    mode === "create"
-      ? "Add Place"
-      : mode === "edit"
-        ? "Edit Place"
-        : "View Place";
+  const title = mode === "create" ? "Add Place" : mode === "edit" ? "Edit Place" : "View Place";
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
-        <div
+        <div 
           className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
           onClick={onClose}
         />
@@ -343,21 +282,18 @@ export default function PlaceModal({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Categories * (Select one or more)
                   </label>
-
+                  
+                  {/* Show selected categories */}
                   {formData.categoryIds.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {formData.categoryIds.map((categoryId) => {
-                        const category = categories.find(
-                          (c) => c.id === categoryId,
-                        );
+                      {formData.categoryIds.map(categoryId => {
+                        const category = categories.find(c => c.id === categoryId);
                         return (
                           <div
                             key={categoryId}
                             className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
                           >
-                            <span>
-                              {category?.name || `Category ${categoryId}`}
-                            </span>
+                            <span>{category?.name || `Category ${categoryId}`}</span>
                             {!isViewMode && (
                               <button
                                 type="button"
@@ -373,6 +309,7 @@ export default function PlaceModal({
                     </div>
                   )}
 
+                  {/* Add category dropdown (only in edit/create mode) */}
                   {!isViewMode && (
                     <div className="flex gap-2">
                       <select
@@ -382,10 +319,8 @@ export default function PlaceModal({
                       >
                         <option value="">Select a category to add...</option>
                         {categories
-                          .filter(
-                            (cat) => !formData.categoryIds.includes(cat.id),
-                          )
-                          .map((cat) => (
+                          .filter(cat => !formData.categoryIds.includes(cat.id))
+                          .map(cat => (
                             <option key={cat.id} value={cat.id}>
                               {cat.name}
                             </option>
@@ -401,11 +336,14 @@ export default function PlaceModal({
                       </button>
                     </div>
                   )}
-
+                  
                   {errors.categoryIds && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.categoryIds}
-                    </p>
+                    <p className="mt-1 text-xs text-red-500">{errors.categoryIds}</p>
+                  )}
+                  
+                  {/* Show message when no categories available to add */}
+                  {!isViewMode && categories.filter(cat => !formData.categoryIds.includes(cat.id)).length === 0 && formData.categoryIds.length > 0 && (
+                    <p className="mt-2 text-xs text-green-600">All categories have been added</p>
                   )}
                 </div>
 
@@ -415,56 +353,52 @@ export default function PlaceModal({
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Latitude * (-90 to 90)
                     </label>
-                    <input
-                      type="number"
-                      name="latitude"
-                      value={formData.latitude}
-                      onChange={handleChange}
-                      disabled={isViewMode}
-                      step="0.00000001"
-                      min="-90"
-                      max="90"
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.latitude ? "border-red-500" : "border-gray-300"
-                      } ${isViewMode ? "bg-gray-50" : ""}`}
-                      placeholder="e.g., 6.9271"
-                    />
+                    <div className="relative">
+                      <Compass className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="number"
+                        name="latitude"
+                        value={formData.latitude}
+                        onChange={handleChange}
+                        disabled={isViewMode}
+                        step="0.00000001"
+                        min="-90"
+                        max="90"
+                        className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          errors.latitude ? "border-red-500" : "border-gray-300"
+                        } ${isViewMode ? "bg-gray-50" : ""}`}
+                        placeholder="e.g., 6.9271"
+                      />
+                    </div>
                     {errors.latitude && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.latitude}
-                      </p>
+                      <p className="mt-1 text-xs text-red-500">{errors.latitude}</p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">
-                      Format: up to 8 decimal places (e.g., 6.92710000)
-                    </p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Longitude * (-180 to 180)
                     </label>
-                    <input
-                      type="number"
-                      name="longitude"
-                      value={formData.longitude}
-                      onChange={handleChange}
-                      disabled={isViewMode}
-                      step="0.00000001"
-                      min="-180"
-                      max="180"
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.longitude ? "border-red-500" : "border-gray-300"
-                      } ${isViewMode ? "bg-gray-50" : ""}`}
-                      placeholder="e.g., 79.8612"
-                    />
+                    <div className="relative">
+                      <Compass className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="number"
+                        name="longitude"
+                        value={formData.longitude}
+                        onChange={handleChange}
+                        disabled={isViewMode}
+                        step="0.00000001"
+                        min="-180"
+                        max="180"
+                        className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          errors.longitude ? "border-red-500" : "border-gray-300"
+                        } ${isViewMode ? "bg-gray-50" : ""}`}
+                        placeholder="e.g., 79.8612"
+                      />
+                    </div>
                     {errors.longitude && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.longitude}
-                      </p>
+                      <p className="mt-1 text-xs text-red-500">{errors.longitude}</p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">
-                      Format: up to 8 decimal places (e.g., 79.86120000)
-                    </p>
                   </div>
                 </div>
 
@@ -474,23 +408,22 @@ export default function PlaceModal({
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Opening Time *
                     </label>
-                    <input
-                      type="text"
-                      name="openingTime"
-                      value={formData.openingTime}
-                      onChange={handleChange}
-                      disabled={isViewMode}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.openingTime
-                          ? "border-red-500"
-                          : "border-gray-300"
-                      } ${isViewMode ? "bg-gray-50" : ""}`}
-                      placeholder="e.g., 9:00 AM"
-                    />
+                    <div className="relative">
+                      <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        name="openingTime"
+                        value={formData.openingTime}
+                        onChange={handleChange}
+                        disabled={isViewMode}
+                        className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          errors.openingTime ? "border-red-500" : "border-gray-300"
+                        } ${isViewMode ? "bg-gray-50" : ""}`}
+                        placeholder="e.g., 9:00 AM"
+                      />
+                    </div>
                     {errors.openingTime && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.openingTime}
-                      </p>
+                      <p className="mt-1 text-xs text-red-500">{errors.openingTime}</p>
                     )}
                   </div>
 
@@ -498,23 +431,22 @@ export default function PlaceModal({
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Closing Time *
                     </label>
-                    <input
-                      type="text"
-                      name="closingTime"
-                      value={formData.closingTime}
-                      onChange={handleChange}
-                      disabled={isViewMode}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.closingTime
-                          ? "border-red-500"
-                          : "border-gray-300"
-                      } ${isViewMode ? "bg-gray-50" : ""}`}
-                      placeholder="e.g., 6:00 PM"
-                    />
+                    <div className="relative">
+                      <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        name="closingTime"
+                        value={formData.closingTime}
+                        onChange={handleChange}
+                        disabled={isViewMode}
+                        className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          errors.closingTime ? "border-red-500" : "border-gray-300"
+                        } ${isViewMode ? "bg-gray-50" : ""}`}
+                        placeholder="e.g., 6:00 PM"
+                      />
+                    </div>
                     {errors.closingTime && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.closingTime}
-                      </p>
+                      <p className="mt-1 text-xs text-red-500">{errors.closingTime}</p>
                     )}
                   </div>
                 </div>
@@ -538,9 +470,7 @@ export default function PlaceModal({
                     placeholder="Distance from city center"
                   />
                   {errors.distance && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.distance}
-                    </p>
+                    <p className="mt-1 text-xs text-red-500">{errors.distance}</p>
                   )}
                 </div>
 
@@ -567,17 +497,20 @@ export default function PlaceModal({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Travel Tips
                   </label>
-                  <textarea
-                    name="travelTips"
-                    value={formData.travelTips}
-                    onChange={handleChange}
-                    disabled={isViewMode}
-                    rows="2"
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.travelTips ? "border-red-500" : "border-gray-300"
-                    } ${isViewMode ? "bg-gray-50" : ""}`}
-                    placeholder="Travel tips for visitors"
-                  />
+                  <div className="relative">
+                    <Lightbulb className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                    <textarea
+                      name="travelTips"
+                      value={formData.travelTips}
+                      onChange={handleChange}
+                      disabled={isViewMode}
+                      rows="2"
+                      className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        errors.travelTips ? "border-red-500" : "border-gray-300"
+                      } ${isViewMode ? "bg-gray-50" : ""}`}
+                      placeholder="Travel tips for visitors"
+                    />
+                  </div>
                 </div>
 
                 {/* Image Field */}
@@ -585,7 +518,7 @@ export default function PlaceModal({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Place Image
                   </label>
-
+                  
                   {previewImage && (
                     <div className="mb-3 relative">
                       <img
@@ -594,8 +527,7 @@ export default function PlaceModal({
                         className="w-full h-64 object-cover rounded-lg border border-gray-200"
                       />
                       {!isViewMode && (
-                        <button
-                          type="button"
+                        <button                          type="button"
                           onClick={handleRemoveImage}
                           className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
                         >
@@ -619,20 +551,16 @@ export default function PlaceModal({
                           className="hidden"
                         />
                       </label>
-                      <p className="mt-1 text-xs text-gray-500">
-                        Supported formats: JPG, PNG, GIF. Max size: 5MB
-                      </p>
+                      <p className="mt-1 text-xs text-gray-500">Supported formats: JPG, PNG, GIF. Max size: 5MB</p>
                     </div>
                   )}
-
+                  
                   {errors.image && (
                     <p className="mt-1 text-xs text-red-500">{errors.image}</p>
                   )}
 
                   {isViewMode && !previewImage && (
-                    <div className="text-sm text-gray-500 italic">
-                      No image available
-                    </div>
+                    <div className="text-sm text-gray-500 italic">No image available</div>
                   )}
                 </div>
               </div>

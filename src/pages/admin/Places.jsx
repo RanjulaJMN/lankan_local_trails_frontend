@@ -10,6 +10,7 @@ export default function Places() {
   const [places, setPlaces] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("create");
@@ -33,69 +34,6 @@ export default function Places() {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  const fetchPlaces = async () => {
-    try {
-      setLoading(true);
-      const response = await getPlaces();
-      console.log("Full API Response:", response);
-      
-      // Handle different response structures
-      let placesArray = [];
-      if (response && response.content) {
-        placesArray = response.content;
-      } else if (Array.isArray(response)) {
-        placesArray = response;
-      } else if (response && response.data && Array.isArray(response.data)) {
-        placesArray = response.data;
-      } else if (response && response.places) {
-        placesArray = response.places;
-      } else {
-        placesArray = [];
-      }
-      
-      // Map the places with categories
-      const mappedPlaces = placesArray.map(place => {
-        console.log(`Processing place ${place.id}:`, place);
-        
-        // Try to get categories from different possible field names
-        let placeCategories = [];
-        if (place.categories && Array.isArray(place.categories)) {
-          placeCategories = place.categories;
-        } else if (place.categoryList && Array.isArray(place.categoryList)) {
-          placeCategories = place.categoryList;
-        } else if (place.placeCategories && Array.isArray(place.placeCategories)) {
-          placeCategories = place.placeCategories;
-        }
-        
-        console.log(`Categories for place ${place.id}:`, placeCategories);
-        
-        return {
-          id: place.id,
-          name: place.name,
-          description: place.description,
-          latitude: place.latitude,
-          longitude: place.longitude,
-          openingTime: place.openingTime || place.opening_time,
-          closingTime: place.closingTime || place.closing_time,
-          distance: place.distance,
-          travelTips: place.travelTips || place.travel_tips,
-          imageUrl: place.imageUrl || place.image_url,
-          categories: placeCategories,
-          categoryNames: placeCategories.map(c => c.name).join(', ')
-        };
-      });
-      
-      console.log("Mapped places:", mappedPlaces);
-      setPlaces(mappedPlaces);
-    } catch (error) {
-      console.error("Error loading places", error);
-      addToast(error.message || "Failed to load places", "error");
-      setPlaces([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchCategories = async () => {
     try {
       const data = await getCategories();
@@ -118,15 +56,78 @@ export default function Places() {
       }));
       console.log("Mapped categories:", mappedCategories);
       setCategories(mappedCategories);
+      setCategoriesLoaded(true);
     } catch (error) {
       console.error("Error loading categories", error);
+      setCategoriesLoaded(true);
+    }
+  };
+
+  const fetchPlaces = async () => {
+    try {
+      setLoading(true);
+      const response = await getPlaces();
+      console.log("Full API Response:", response);
+      
+      // Handle different response structures
+      let placesArray = [];
+      if (response && response.content) {
+        placesArray = response.content;
+      } else if (Array.isArray(response)) {
+        placesArray = response;
+      } else if (response && response.data && Array.isArray(response.data)) {
+        placesArray = response.data;
+      } else {
+        placesArray = [];
+      }
+      
+      // Map the places with categories
+      const mappedPlaces = placesArray.map(place => {
+        console.log(`Processing place ${place.id}:`, place);
+        
+        // Get category IDs from the response
+        const categoryIds = place.categoryIds || [];
+        
+        // Get category names by matching IDs with categories list
+        const placeCategories = categoryIds.map(id => {
+          const category = categories.find(c => c.id === id);
+          return { id, name: category ? category.name : `Category ${id}` };
+        });
+        
+        return {
+          id: place.id,
+          name: place.name,
+          description: place.description,
+          latitude: place.latitude,
+          longitude: place.longitude,
+          openingTime: place.openingTime || place.opening_time,
+          closingTime: place.closingTime || place.closing_time,
+          distance: place.distance,
+          travelTips: place.travelTips || place.travel_tips,
+          imageUrl: place.imageUrl || place.image_url,
+          categoryIds: categoryIds,
+          categories: placeCategories,
+          categoryNames: placeCategories.map(c => c.name).join(', ')
+        };
+      });
+      
+      console.log("Mapped places with categories:", mappedPlaces);
+      setPlaces(mappedPlaces);
+    } catch (error) {
+      console.error("Error loading places", error);
+      addToast(error.message || "Failed to load places", "error");
+      setPlaces([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchPlaces();
-    fetchCategories();
+    const loadData = async () => {
+      await fetchCategories();
+      await fetchPlaces();
+    };
+    loadData();
   }, []);
 
   const handleCreate = () => {
@@ -138,21 +139,30 @@ export default function Places() {
   const handleEdit = async (place) => {
     console.log("Editing place:", place);
     
-    // Fetch the full place details including categories
     try {
+      // Fetch full place details
       const response = await api.get(`/places/${place.id}`);
-      console.log("Full place details for edit:", response.data);
+      console.log("Full place details response:", response.data);
       
       let placeData = response.data;
       if (placeData.data) placeData = placeData.data;
       
+      // Ensure categoryIds is an array
+      if (!placeData.categoryIds) {
+        placeData.categoryIds = [];
+      }
+      
+      console.log("Place data with categoryIds:", placeData);
       setSelectedPlace(placeData);
       setModalMode("edit");
       setModalOpen(true);
     } catch (error) {
       console.error("Error fetching place details:", error);
-      // Fallback to the place from the list
-      setSelectedPlace(place);
+      // Fallback: Use the place from list
+      setSelectedPlace({
+        ...place,
+        categoryIds: place.categoryIds || []
+      });
       setModalMode("edit");
       setModalOpen(true);
     }
@@ -161,7 +171,6 @@ export default function Places() {
   const handleView = async (place) => {
     console.log("Viewing place:", place);
     
-    // Fetch the full place details including categories
     try {
       const response = await api.get(`/places/${place.id}`);
       console.log("Full place details for view:", response.data);
@@ -169,13 +178,19 @@ export default function Places() {
       let placeData = response.data;
       if (placeData.data) placeData = placeData.data;
       
+      if (!placeData.categoryIds) {
+        placeData.categoryIds = [];
+      }
+      
       setSelectedPlace(placeData);
       setModalMode("view");
       setModalOpen(true);
     } catch (error) {
       console.error("Error fetching place details:", error);
-      // Fallback to the place from the list
-      setSelectedPlace(place);
+      setSelectedPlace({
+        ...place,
+        categoryIds: place.categoryIds || []
+      });
       setModalMode("view");
       setModalOpen(true);
     }
@@ -327,12 +342,16 @@ export default function Places() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1">
-                        {place.categories && place.categories.map(cat => (
-                          <span key={cat.id} className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                            {cat.name}
-                          </span>
-                        ))}
-                        {(!place.categories || place.categories.length === 0) && (
+                        {place.categoryIds && place.categoryIds.length > 0 ? (
+                          place.categoryIds.map(categoryId => {
+                            const category = categories.find(c => c.id === categoryId);
+                            return (
+                              <span key={categoryId} className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                                {category?.name || `Category ${categoryId}`}
+                              </span>
+                            );
+                          })
+                        ) : (
                           <span className="text-xs text-gray-400">No categories</span>
                         )}
                       </div>
