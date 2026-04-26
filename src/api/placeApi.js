@@ -15,10 +15,12 @@ const logFormData = (formData) => {
   console.log("========================");
 };
 
-// Get all places
-export const getPlaces = async () => {
+export const getPlaces = async (params = {}) => {
   try {
-    const response = await api.get('api/places');
+    // If params is empty, just get all places
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `api/places?${queryString}` : "api/places";
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error('Error fetching places:', error);
@@ -85,3 +87,6 @@ export const getPlace = async (id) => {
     throw error;
   }
 };
+
+
+

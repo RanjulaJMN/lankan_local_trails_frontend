@@ -4,8 +4,10 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 // Public Components
 import Home from "./pages/Home";
-import BrowsePlaces from "./pages/BrowsePlaces";      // renamed to avoid conflict
+import BrowsePlaces from "./pages/BrowsePlaces"; 
 import PlaceDetails from "./pages/PlaceDetails";
+
+import SelectPlacesForPlan from "./pages/user/SelectPlacesForPlan";
 
 // Admin Components
 import AdminLayout from "./layouts/AdminLayout";
@@ -16,6 +18,7 @@ import Categories from "./pages/admin/Categories";
 import Places from "./pages/admin/Places";
 import Users from "./pages/admin/Users";
 import VisitPlans from "./pages/admin/VisitPlans";
+import MapView from "./pages/MapView";
 
 // User Components
 import UserLayout from "./layouts/UserLayout";
@@ -40,10 +43,11 @@ function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/places" element={<BrowsePlaces />} />
       <Route path="/places/:id" element={<PlaceDetails />} />
+      <Route path="/map" element={<MapView />} />
       {/* Admin Auth Routes */}
       <Route path="/admin/login" element={
         isAuthenticated && role === "ADMIN" ? 
-          <Navigate to="/admin" replace /> :   // was "/admin/dashboard"
+          <Navigate to="/admin" replace /> :
           <AdminLogin />
       } />
       <Route path="/admin/register" element={
@@ -84,7 +88,8 @@ function AppRoutes() {
           <UserLayout />
         </ProtectedRoute>
       }>
-        <Route path="dashboard" element={<UserDashboard />} />
+         <Route path="dashboard" element={<UserDashboard />} />
+         <Route path="create-plan" element={<SelectPlacesForPlan />} />
       </Route>
     </Routes>
   );
